@@ -1,0 +1,21 @@
+{
+  "name": "@finflow/database",
+  "version": "1.0.0",
+  "description": "PostgreSQL connection pool and migrations for FinFlow",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').cpSync('migrations','dist/migrations',{recursive:true})\"",
+    "dev": "tsc --watch",
+    "migrate": "ts-node src/migrate.ts",
+    "migrate:build": "node dist/migrate.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

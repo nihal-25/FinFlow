@@ -1,0 +1,19 @@
+{
+  "name": "@finflow/kafka",
+  "version": "1.0.0",
+  "description": "Kafka producer/consumer wrappers for FinFlow",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@finflow/types": "*",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5"
+  }
+}

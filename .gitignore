@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env.*.local
+# Keep examples
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.local
+
+# Editor
+.idea/
+.vscode/settings.json
+*.suo
+*.sw?
+
+# Testing
+coverage/
+
+.vercel
+.claude/

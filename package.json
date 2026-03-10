@@ -1,0 +1,40 @@
+{
+  "name": "finflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time financial transaction processing platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "docker-compose up -d && npm run dev:services",
+    "dev:services": "concurrently \"npm run dev -w apps/api-gateway\" \"npm run dev -w apps/transaction-service\" \"npm run dev -w apps/fraud-service\" \"npm run dev -w apps/notification-service\" \"npm run dev -w apps/analytics-service\"",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --build --noEmit",
+    "db:migrate": "npm run migrate -w packages/database",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "build:packages": "npm run build -w packages/types && npm run build -w packages/database && npm run build -w packages/redis && npm run build -w packages/kafka",
+    "build:api-gateway": "npm run build:packages && npm run build -w apps/api-gateway",
+    "build:transaction-service": "npm run build:packages && npm run build -w apps/transaction-service",
+    "build:fraud-service": "npm run build:packages && npm run build -w apps/fraud-service",
+    "build:notification-service": "npm run build:packages && npm run build -w apps/notification-service",
+    "build:analytics-service": "npm run build:packages && npm run build -w apps/analytics-service"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

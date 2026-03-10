@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "FinFlow API",
+    "description": "Complete API collection for the FinFlow real-time financial transaction platform.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3001", "type": "string" },
+    { "key": "tx_base_url", "value": "http://localhost:3002", "type": "string" },
+    { "key": "analytics_base_url", "value": "http://localhost:3005", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "account_id_1", "value": "", "type": "string" },
+    { "key": "account_id_2", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Tenant",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantName\": \"Acme Corp\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"admin@acme.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const json = pm.response.json();", "pm.collectionVariables.set('access_token', json.data?.accessToken ?? '');"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@acme.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/refresh",
+            "header": []
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/auth/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Create API Key",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/api-keys",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Production Server\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/auth/api-keys",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Revoke API Key",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/auth/api-keys/:id",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["const json = pm.response.json();", "pm.collectionVariables.set('account_id_1', json.data?.id ?? '');"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{tx_base_url}}/accounts",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Wallet\",\n  \"type\": \"wallet\",\n  \"currency\": \"USD\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "url": "{{tx_base_url}}/accounts",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Get Account with Balance",
+          "request": {
+            "method": "GET",
+            "url": "{{tx_base_url}}/accounts/{{account_id_1}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Get Account Balance",
+          "request": {
+            "method": "GET",
+            "url": "{{tx_base_url}}/accounts/{{account_id_1}}/balance",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "url": "{{tx_base_url}}/transactions",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account_id_1}}\",\n  \"destinationAccountId\": \"{{account_id_2}}\",\n  \"amount\": \"100.00\",\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"unique-key-{{$randomUUID}}\",\n  \"description\": \"Payment for services\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Transactions (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{tx_base_url}}/transactions?page=1&limit=20&status=completed",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "completed" }
+              ]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{tx_base_url}}/transactions/:id",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Reverse Transaction",
+          "request": {
+            "method": "POST",
+            "url": "{{tx_base_url}}/transactions/:id/reverse",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotencyKey\": \"reversal-{{$randomUUID}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{analytics_base_url}}/analytics/summary",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Get Volume (7 days)",
+          "request": {
+            "method": "GET",
+            "url": "{{analytics_base_url}}/analytics/volume?period=7d",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        },
+        {
+          "name": "Get Fraud Rate",
+          "request": {
+            "method": "GET",
+            "url": "{{analytics_base_url}}/analytics/fraud-rate",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        { "name": "API Gateway Health", "request": { "method": "GET", "url": "{{base_url}}/health" } },
+        { "name": "Transaction Service Health", "request": { "method": "GET", "url": "{{tx_base_url}}/health" } },
+        { "name": "Analytics Service Health", "request": { "method": "GET", "url": "{{analytics_base_url}}/health" } }
+      ]
+    }
+  ]
+}
