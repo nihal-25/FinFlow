@@ -20,14 +20,9 @@
 | API Gateway | https://api-gateway-production-75e4.up.railway.app |
 | Analytics / WebSocket | https://analytics-service-production-7454.up.railway.app |
 
-**Quick start — use the pre-seeded account or register your own:**
+**Quick start:** register a new account at the link below, then click **Load Demo Data** in the sidebar to instantly create wallets and transactions that trigger all 4 fraud detection rules.
 
-| Field | Value |
-|---|---|
-| Email | `demo@finflow.dev` |
-| Password | `Demo1234!` |
-
-Log in with these credentials (demo data already loaded) — or register a new account and click **Load Demo Data** in the sidebar to instantly create wallets and transactions that trigger all 4 fraud detection rules.
+> **Last verified working:** June 15, 2026 — all 7 Railway services (api-gateway, transaction-service, fraud-service, notification-service, analytics-service, PostgreSQL, Redis) fully operational. Registration, JWT auth, transfers, double-entry ledger, fraud detection, and Kafka pipeline all tested end-to-end.
 
 ---
 
