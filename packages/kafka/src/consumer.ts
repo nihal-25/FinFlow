@@ -102,7 +102,7 @@ function buildSaslConfig(): SASLOptions | undefined {
   const username = process.env["KAFKA_SASL_USERNAME"];
   const password = process.env["KAFKA_SASL_PASSWORD"];
   if (username && password) {
-    return { mechanism: "scram-sha-256", username, password };
+    return { mechanism: "plain", username, password };
   }
   return undefined;
 }

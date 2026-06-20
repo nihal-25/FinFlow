@@ -1,6 +1,6 @@
 import { PoolClient } from "pg";
 import { query, queryOne, withTransaction } from "@finflow/database";
-import { acquireLock, getRedisClient } from "@finflow/redis";
+import { acquireLock } from "@finflow/redis";
 import { publishEvent } from "@finflow/kafka";
 import { KAFKA_TOPICS } from "@finflow/types";
 import type { Transaction, AccountCurrency, PaginatedResult } from "@finflow/types";
@@ -72,82 +72,6 @@ export interface CreateTransactionInput {
   metadata?: Record<string, unknown> | undefined;
 }
 
-async function runFraudChecks(transaction: Transaction, tenantId: string): Promise<void> {
-  const rulesTriggered: string[] = [];
-  const amount = transaction.amount;
-  const sourceAccountId = transaction.sourceAccountId;
-
-  // Rule 1: Large transaction > $10,000
-  if (parseFloat(amount) > 10000) {
-    rulesTriggered.push("large_transaction");
-  }
-
-  // Rule 2: Velocity — more than 10 transactions from this account in last 5 minutes
-  try {
-    const redis = getRedisClient();
-    const key = `fraud:velocity:${sourceAccountId}`;
-    const count = await redis.incr(key);
-    await redis.expire(key, 300);
-    if (count > 10) {
-      rulesTriggered.push("velocity");
-    }
-  } catch {
-    // Redis failure should not break transactions
-  }
-
-  // Rule 3: Amount anomaly — transaction > 5x the 30-day average (min 5 data points)
-  try {
-    const avgResult = await queryOne<{ avg_amount: string; tx_count: string }>(
-      `SELECT AVG(le.amount)::TEXT AS avg_amount, COUNT(*)::TEXT AS tx_count
-       FROM ledger_entries le
-       JOIN transactions t ON t.id = le.transaction_id
-       WHERE le.account_id = $1 AND le.type = 'debit'
-         AND le.created_at > NOW() - INTERVAL '30 days'`,
-      [sourceAccountId]
-    );
-    const txCount = parseInt(avgResult?.tx_count ?? "0", 10);
-    if (txCount >= 5) {
-      const avg = parseFloat(avgResult?.avg_amount ?? "0");
-      if (avg > 0 && parseFloat(amount) > avg * 5) {
-        rulesTriggered.push("amount_anomaly");
-      }
-    }
-  } catch {
-    // ignore
-  }
-
-  // Rule 4: Round-tripping — same amount sent back within 60 seconds
-  try {
-    const rtResult = await queryOne<{ count: string }>(
-      `SELECT COUNT(*)::TEXT AS count FROM transactions
-       WHERE source_account_id = $1 AND destination_account_id = $2
-         AND amount = $3 AND status = 'completed'
-         AND created_at > NOW() - INTERVAL '60 seconds'`,
-      [transaction.destinationAccountId, sourceAccountId, amount]
-    );
-    if (parseInt(rtResult?.count ?? "0", 10) > 0) {
-      rulesTriggered.push("round_trip");
-    }
-  } catch {
-    // ignore
-  }
-
-  if (rulesTriggered.length === 0) return;
-
-  const riskScore = Math.min(100, rulesTriggered.length * 30 + (rulesTriggered.includes("large_transaction") ? 20 : 0));
-
-  try {
-    await query(
-      `INSERT INTO fraud_alerts (tenant_id, transaction_id, account_id, rules_triggered, risk_score, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [tenantId, transaction.id, sourceAccountId, rulesTriggered, riskScore, JSON.stringify({ amount, rules: rulesTriggered })]
-    );
-    console.log(`[fraud] Alert created for tx ${transaction.id}: ${rulesTriggered.join(", ")}`);
-  } catch (err: unknown) {
-    console.error("[fraud] Failed to insert fraud alert:", (err as Error).message);
-  }
-}
-
 export async function createTransaction(
   input: CreateTransactionInput
 ): Promise<{ transaction: Transaction; isIdempotentReplay: boolean }> {
@@ -176,11 +100,6 @@ export async function createTransaction(
     const transaction = await withTransaction(async (client) => {
       return processTransaction(client, input);
     });
-
-    // Run fraud checks asynchronously — do not block the response
-    runFraudChecks(transaction, input.tenantId).catch((err: unknown) =>
-      console.error("[fraud] Fraud check error:", (err as Error).message)
-    );
 
     // Notify analytics-service to emit Socket.io event for live feed
     notifyAnalytics(input.tenantId, "transaction:completed", {
