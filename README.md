@@ -8,7 +8,7 @@ all deployed on Railway.
 
 ## Live demo
 
-https://frontend-phi-six-93.vercel.app
+https://frontend-tau-dusky-91.vercel.app
 
 Register, then click **Load Demo Data** in the sidebar. That one button creates three
 wallets, deposits funds, and runs 18 transactions designed to trigger all four fraud
@@ -289,7 +289,7 @@ blacklist verification, and API key create/authenticate/revoke.
 
 ## Test flow
 
-Everything below works on the live demo at https://frontend-phi-six-93.vercel.app.
+Everything below works on the live demo at https://frontend-tau-dusky-91.vercel.app.
 
 1. Go to **/register**. Fill in your name, a company/tenant name, email, and password.
    You will be logged in automatically.

@@ -13,7 +13,7 @@ router.get("/", (_req: Request, res: Response): void => {
       description: "Production-grade financial transaction platform",
       version: "1.0.0",
       status: "operational",
-      dashboard: "https://frontend-phi-six-93.vercel.app",
+      dashboard: "https://frontend-tau-dusky-91.vercel.app",
       endpoints: {
         health:       "GET  /health",
         register:     "POST /auth/register",

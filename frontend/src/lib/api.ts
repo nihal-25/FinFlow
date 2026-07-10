@@ -40,8 +40,11 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        // Use the same base as the api instance so refresh hits the real
+        // gateway in production (VITE_API_URL) and the Vite proxy in dev ("/api").
+        const apiBase = import.meta.env["VITE_API_URL"] ?? "/api";
         const { data } = await axios.post<{ success: boolean; data: { accessToken: string } }>(
-          "/api/auth/refresh",
+          `${apiBase}/auth/refresh`,
           {},
           { withCredentials: true }
         );
