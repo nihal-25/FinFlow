@@ -8,7 +8,7 @@ import morgan from "morgan";
 import { v4 as uuidv4 } from "uuid";
 import { createPool } from "@finflow/database";
 import { createRedisClient } from "@finflow/redis";
-import { createKafkaProducer } from "@finflow/kafka";
+import { createKafkaProducer, connectProducer } from "@finflow/kafka";
 import { config } from "./config";
 import accountRoutes from "./routes/accounts.routes";
 import transactionRoutes from "./routes/transactions.routes";
@@ -48,6 +48,9 @@ async function bootstrap(): Promise<void> {
   createPool(config.DATABASE_URL);
   createRedisClient(config.REDIS_URL);
   createKafkaProducer(config.KAFKA_BROKERS.split(","), config.KAFKA_CLIENT_ID);
+  // Eagerly connect so the first transaction doesn't race connection setup and
+  // so a dropped connection is reconnected before the next publish.
+  connectProducer().catch((err) => console.error("[kafka] Initial producer connect failed:", (err as Error).message));
 
   app.listen(config.PORT, () => {
     console.log(JSON.stringify({ level: "INFO", service: "transaction-service", message: `Listening on port ${config.PORT}` }));
