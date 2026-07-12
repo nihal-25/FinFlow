@@ -9,9 +9,16 @@ interface TransactionEvent {
   reason?: string;
 }
 
+interface FraudAlertEvent {
+  alert: { id: string; riskScore: number; rulesTriggered: string[] };
+  transaction: Transaction;
+  timestamp: string;
+}
+
 interface UseWebSocketOptions {
   onTransactionCompleted?: (event: TransactionEvent) => void;
   onTransactionFailed?: (event: TransactionEvent) => void;
+  onFraudAlert?: (event: FraudAlertEvent) => void;
 }
 
 export function useWebSocket(options: UseWebSocketOptions): void {
@@ -37,6 +44,10 @@ export function useWebSocket(options: UseWebSocketOptions): void {
 
     socket.on("transaction:failed", (event: TransactionEvent) => {
       options.onTransactionFailed?.(event);
+    });
+
+    socket.on("fraud:alert", (event: FraudAlertEvent) => {
+      options.onFraudAlert?.(event);
     });
 
     socket.on("connect_error", (err) => {

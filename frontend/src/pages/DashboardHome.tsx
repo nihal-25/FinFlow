@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { api } from "../lib/api.ts";
 import { useWebSocket } from "../hooks/useWebSocket.ts";
@@ -75,11 +75,20 @@ export default function DashboardHome(): React.ReactElement {
     refetchInterval: 15_000,
   });
 
+  const queryClient = useQueryClient();
+
   const handleTransactionCompleted = useCallback((event: { transaction: Transaction }) => {
     setWsTransactions((prev) => [event.transaction, ...prev].slice(0, 20));
   }, []);
 
-  useWebSocket({ onTransactionCompleted: handleTransactionCompleted });
+  // When a fraud alert is created (pushed from analytics-service on the
+  // fraud.alerts event), bust the cached summary so the fraud count recomputes
+  // immediately — no waiting for the 15s poll, no manual refresh.
+  const handleFraudAlert = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["analytics", "summary"] });
+  }, [queryClient]);
+
+  useWebSocket({ onTransactionCompleted: handleTransactionCompleted, onFraudAlert: handleFraudAlert });
 
   // Merge: WebSocket live events on top, then recent transactions (deduped)
   const wsIds = new Set(wsTransactions.map((t) => t.id));
