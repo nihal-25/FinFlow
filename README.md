@@ -33,6 +33,10 @@ a fraud check to complete.
 I built this to work through those problems properly, not just describe them. It's
 multi-tenant from the start, so the same backend serves completely isolated organizations.
 
+![FinFlow dashboard](docs/screenshots/dashboard.png)
+
+*The FinFlow dashboard: total volume, transaction count, open fraud alerts, and success rate with a live transaction feed.*
+
 ---
 
 ## Architecture
@@ -123,6 +127,10 @@ the event queues and gets processed when it restarts. No data loss. And the tran
 service has no knowledge of what consumes its events, so adding a new downstream
 consumer means writing that consumer, not touching the producer.
 
+![Confluent Cloud events](docs/screenshots/confluent-events.png)
+
+*Real events in the Confluent Cloud `transactions.completed` topic, with `tenantId` scoping visible on each message.*
+
 ### TypeScript
 
 Strict mode across all nine projects, with `exactOptionalPropertyTypes: true`. The
@@ -157,6 +165,10 @@ The ledger approach avoids it entirely. Every debit and credit is a separate imm
 row. Balance is always `SUM(credits) - SUM(debits)`, computed at query time from the
 full history. It cannot drift. You also get a full audit trail for free, which is what
 compliance actually requires.
+
+![Ledger detail](docs/screenshots/ledger-detail.png)
+
+*The paired debit and credit entries for a single transfer — the two immutable rows that make up one double-entry transaction.*
 
 ### The append-only rule
 
@@ -202,6 +214,10 @@ Neither service is in the payment response path. If they are slow, it does not m
 If they crash, Kafka holds the events until they restart. Consumer groups mean each
 service maintains its own offset independently.
 
+![Fraud alerts](docs/screenshots/fraud-alerts.png)
+
+*These alerts were created by the fraud-service Kafka consumer reacting to `transaction.completed` events — not inline in the payment path.*
+
 ### Webhook signatures
 
 Webhook deliveries include `X-Finflow-Signature: sha256=<HMAC-SHA256(secret, body)>`.
@@ -210,6 +226,10 @@ in transit. Each endpoint has its own secret stored in Postgres. Delivery failur
 with exponential backoff (100ms, 200ms, 400ms, and so on) up to a configured limit. The
 test endpoint button in the settings UI fires a real delivery immediately and shows the
 HTTP response.
+
+![Webhook signature](docs/screenshots/webhook-signature.png)
+
+*A delivered webhook showing the `x-finflow-signature` HMAC-SHA256 header the receiver uses to verify authenticity.*
 
 ### Auth
 
