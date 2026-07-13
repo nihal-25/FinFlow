@@ -374,36 +374,6 @@ services can.
 
 ---
 
-## What I'd do differently
-
-### Sagas for multi-step operations
-
-The current transaction write is a single atomic Postgres operation, which works well
-for same-database transfers. If you needed to coordinate with an external card network,
-a different database, or any system where you cannot wrap everything in one DB
-transaction, you would need a proper saga with explicit compensating transactions. Getting
-that right is genuinely hard and I left it out.
-
-### Distributed tracing
-
-There are correlation IDs on every request and they propagate through Kafka message
-headers. You can trace a transaction through log lines by correlation ID. But there is no
-OpenTelemetry, no trace viewer, no flame graph. When something breaks and the event has
-flowed from the transaction service through Kafka into the fraud service and then into the
-notification service, you correlate timestamps manually. Adding OTEL would make debugging
-in production much faster.
-
-### Webhook secret storage
-
-Each webhook endpoint stores its HMAC secret in a Postgres column. For a deployment with
-serious security requirements you would want those secrets in something like AWS KMS or
-HashiCorp Vault, where the secret material never lives in application-readable database
-storage and access is audited. Storing secrets next to the endpoint config is convenient
-for a side project and a reasonable place to start, but it is not where you would leave
-them.
-
----
-
 ## License
 
 MIT
